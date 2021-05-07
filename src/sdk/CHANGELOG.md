@@ -6,6 +6,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+- Alignment of PageHeaderTitleAlignment enum with what's used in PnP Framework [jansenbe - Bert Jansen]
+- Hubsite joining/unjoining documention update #416 [plamber - Patrick Lamber]
+- Fixed url encoding issue when the .NET Standard 2.0 build was used in a .NET Framework application [jansenbe - Bert Jansen]
+- Correctly handle list item data for fields starting with an _ (replace OData__ with _ when parsing the response) [jansenbe - Bert Jansen]
+- Improved handling of errors when message is not in the expected format [jansenbe - Bert Jansen]
+- Correctly handle site url's containing special characters when building a SP REST batch request [jansenbe - Bert Jansen]
+- Removed List.Url property as it does not exist on the SP.List object [wonderplayer - Rolands Strakis]
+- Get hub site information by hub site id [pkbullock - Paul Bullock]
+- Refreshed list of OOB web parts, now includes Spaces (mixed reality) web parts [jansenbe - Bert Jansen]
+- Update sites documentation #397 [wonderplayer - Rolands Strakis]
+- Added support for reading/saving Viva Topic pages [jansenbe - Bert Jansen]
+- Implement paging in loadPagesAsync [jansenbe - Bert Jansen]
+- Make loadPagesAsync work when querying for a specific page in a big list #383 [YannickRe - Yannick Reekmans]
+- Implement the EnsurePageListItemAsync method via GetFileByServerRelativeUrlAsync instead of using a CAML query to load the item to prevent 5000 item limit issues [jansenbe - Bert Jansen]
+
 ## [1.1.0]
 
 ### Added

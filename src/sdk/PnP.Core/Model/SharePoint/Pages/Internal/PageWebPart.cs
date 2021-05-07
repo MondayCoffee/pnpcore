@@ -157,7 +157,7 @@ namespace PnP.Core.Model.SharePoint
         /// <summary>
         /// Indicates that this control is persisted/read using the data-sp-controldata attribute only
         /// </summary>
-        public bool UsingSpControlDataOnly { get; set; }
+        internal bool UsingSpControlDataOnly { get; set; }
 
         /// <summary>
         /// This control lives in the page header (not removable control)
@@ -172,7 +172,7 @@ namespace PnP.Core.Model.SharePoint
         /// </summary>
         /// <param name="component"><see cref="PageComponent"/> to import</param>
         /// <param name="clientSideWebPartPropertiesUpdater">Function callback that allows you to manipulate the client side web part properties after import</param>
-        public void Import(PageComponent component, Func<String, String> clientSideWebPartPropertiesUpdater = null)
+        public void Import(PageComponent component, Func<string, string> clientSideWebPartPropertiesUpdater = null)
         {
             // Sometimes the id guid is encoded with curly brackets, so let's drop those
             WebPartId = new Guid(component.Id).ToString("D");
@@ -252,7 +252,7 @@ namespace PnP.Core.Model.SharePoint
 
                 controlData.Emphasis = new SectionEmphasis()
                 {
-                    ZoneEmphasis = Column.VerticalSectionEmphasis.HasValue ? Column.VerticalSectionEmphasis.Value : Section.ZoneEmphasis,
+                    ZoneEmphasis = Column.VerticalSectionEmphasis ?? Section.ZoneEmphasis,
                 };
 
                 // Set the control's data version to the latest version...default was 1.0, but some controls use a higher version
@@ -263,27 +263,27 @@ namespace PnP.Core.Model.SharePoint
                 {
                     if (webPartType == DefaultWebPart.Image)
                     {
-                        dataVersion = "1.8";
+                        dataVersion = "1.9";
                     }
                     else if (webPartType == DefaultWebPart.ImageGallery)
                     {
-                        dataVersion = "1.6";
+                        dataVersion = "1.8";
                     }
                     else if (webPartType == DefaultWebPart.People)
                     {
-                        dataVersion = "1.2";
+                        dataVersion = "1.3";
                     }
                     else if (webPartType == DefaultWebPart.DocumentEmbed)
                     {
-                        dataVersion = "1.1";
+                        dataVersion = "1.2";
                     }
                     else if (webPartType == DefaultWebPart.ContentRollup)
                     {
-                        dataVersion = "2.1";
+                        dataVersion = "2.5";
                     }
                     else if (webPartType == DefaultWebPart.QuickLinks)
                     {
-                        dataVersion = "2.0";
+                        dataVersion = "2.2";
                     }
                 }
 
@@ -429,73 +429,80 @@ namespace PnP.Core.Model.SharePoint
 
             var wpDiv = element.GetElementsByTagName("div").Where(a => a.HasAttribute(WebPartDataAttribute)).FirstOrDefault();
 
-            // Some components on the page (e.g. web parts configured with isDomainIsolated = true) are rendered differently in the HTML
+            string decodedWebPart;
+            // Some components are in the page header and need to be handled as a control instead of a webpart
             if (wpDiv == null)
             {
-                throw new Exception("Oops...seems we end up here anyway...check PnP.Framework code to understand what was here");
+                // Decode the html encoded string
+                decodedWebPart = WebUtility.HtmlDecode(element.GetAttribute(ControlDataAttribute));
+                IsHeaderControl = true;
             }
             else
             {
                 WebPartData = wpDiv.GetAttribute(WebPartAttribute);
 
                 // Decode the html encoded string
-                var decoded = WebUtility.HtmlDecode(wpDiv.GetAttribute(WebPartDataAttribute));
-                var wpJObject = JsonDocument.Parse(decoded).RootElement;
+                decodedWebPart = WebUtility.HtmlDecode(wpDiv.GetAttribute(WebPartDataAttribute));
+            }
 
-                if (wpJObject.TryGetProperty("title", out JsonElement titleProperty))
+            var wpJObject = JsonDocument.Parse(decodedWebPart).RootElement;
+
+            if (wpJObject.TryGetProperty("title", out JsonElement titleProperty))
+            {
+                Title = titleProperty.GetString();
+            }
+            else
+            {
+                Title = "";
+            }
+
+            if (wpJObject.TryGetProperty("description", out JsonElement descriptionProperty))
+            {
+                Description = descriptionProperty.GetString();
+            }
+            else
+            {
+                Description = "";
+            }
+
+            // Set property to trigger correct loading of properties 
+            PropertiesJson = wpJObject.GetProperty("properties").ToString();
+
+            // Set/update dataVersion if it was set in the json data
+            if (wpJObject.TryGetProperty("dataVersion", out JsonElement dataVersionValue))
+            {
+                this.dataVersion = dataVersionValue.GetString();
+            }
+
+            // Check for fullbleed supporting web parts
+            if (wpJObject.TryGetProperty("properties", out JsonElement properties))
+            {
+                if (properties.TryGetProperty("isFullWidth", out JsonElement isFullWidth))
                 {
-                    Title = titleProperty.GetString();
+                    SupportsFullBleed = isFullWidth.GetBoolean();
                 }
-                else
-                {
-                    Title = "";
-                }
+            }
 
-                if (wpJObject.TryGetProperty("description", out JsonElement descriptionProperty))
-                {
-                    Description = descriptionProperty.GetString();
-                }
-                else
-                {
-                    Description = "";
-                }
+            // Store the server processed content as that's needed for full fidelity
+            if (wpJObject.TryGetProperty("serverProcessedContent", out JsonElement serverProcessedContent))
+            {
+                ServerProcessedContent = serverProcessedContent;
+            }
 
-                // Set property to trigger correct loading of properties 
-                PropertiesJson = wpJObject.GetProperty("properties").ToString();
+            if (wpJObject.TryGetProperty("dynamicDataPaths", out JsonElement dynamicDataPaths))
+            {
+                DynamicDataPaths = dynamicDataPaths;
+            }
 
-                // Set/update dataVersion if it was set in the json data
-                if (wpJObject.TryGetProperty("dataVersion", out JsonElement dataVersion))
-                {
-                    this.dataVersion = dataVersion.GetString();
-                }
+            if (wpJObject.TryGetProperty("dynamicDataValues", out JsonElement dynamicDataValues))
+            {
+                DynamicDataValues = dynamicDataValues;
+            }
 
-                // Check for fullbleed supporting web parts
-                if (wpJObject.TryGetProperty("properties", out JsonElement properties))
-                {
-                    if (properties.TryGetProperty("isFullWidth", out JsonElement isFullWidth))
-                    {
-                        SupportsFullBleed = isFullWidth.GetBoolean();
-                    }
-                }
+            WebPartId = wpJObject.GetProperty("id").GetString();
 
-                // Store the server processed content as that's needed for full fidelity
-                if (wpJObject.TryGetProperty("serverProcessedContent", out JsonElement serverProcessedContent))
-                {
-                    ServerProcessedContent = serverProcessedContent;
-                }
-
-                if (wpJObject.TryGetProperty("dynamicDataPaths", out JsonElement dynamicDataPaths))
-                {
-                    DynamicDataPaths = dynamicDataPaths;
-                }
-
-                if (wpJObject.TryGetProperty("dynamicDataValues", out JsonElement dynamicDataValues))
-                {
-                    DynamicDataValues = dynamicDataValues;
-                }
-
-                WebPartId = wpJObject.GetProperty("id").GetString();
-
+            if (wpDiv != null)
+            {
                 var wpHtmlProperties = wpDiv.GetElementsByTagName("div").Where(a => a.HasAttribute(WebPartHtmlPropertiesAttribute)).FirstOrDefault();
                 HtmlPropertiesData = wpHtmlProperties.InnerHtml;
                 HtmlProperties = wpHtmlProperties.GetAttribute(WebPartHtmlPropertiesAttribute);

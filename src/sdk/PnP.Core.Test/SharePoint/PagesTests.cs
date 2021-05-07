@@ -104,7 +104,7 @@ namespace PnP.Core.Test.SharePoint
             //TestCommon.Instance.Mocking = false;
             using (var context = await TestCommon.Instance.GetContextAsync(TestCommon.TestSite))
             {
-                var pages = await context.Web.GetPagesAsync("Ho");
+                var pages = await context.Web.GetPagesAsync("Hom");
                 Assert.IsTrue(pages.Count == 1);
             }
         }
@@ -1032,6 +1032,64 @@ namespace PnP.Core.Test.SharePoint
                 await page.DeleteAsync();
             }
         }
+
+        [TestMethod]
+        public async Task MoveControlsTest()
+        {
+            //TestCommon.Instance.Mocking = false;
+            using (var context = await TestCommon.Instance.GetContextAsync(TestCommon.NoGroupTestSite))
+            {
+                var page = await context.Web.NewPageAsync();
+                string pageName = TestCommon.GetPnPSdkTestAssetName("MoveControlsTest.aspx");
+
+                // Add all the possible sections 
+                page.AddSection(CanvasSectionTemplate.OneColumnFullWidth, 1);
+                page.AddSection(CanvasSectionTemplate.TwoColumn, 2);
+                page.AddSection(CanvasSectionTemplate.ThreeColumn, 3);
+
+                var availableComponents = await page.AvailablePageComponentsAsync();
+                var imageWebPartComponent = availableComponents.FirstOrDefault(p => p.Id == page.DefaultWebPartToWebPartId(DefaultWebPart.Image));
+
+                // Add a text control in each section
+                page.AddControl(page.NewWebPart(imageWebPartComponent), page.Sections[0].Columns[0]);
+                page.AddControl(page.NewWebPart(imageWebPartComponent), page.Sections[0].Columns[0]);
+                page.AddControl(page.NewWebPart(imageWebPartComponent), page.Sections[1].Columns[1]);
+                page.AddControl(page.NewWebPart(imageWebPartComponent), page.Sections[1].Columns[1]);
+                page.AddControl(page.NewWebPart(imageWebPartComponent), page.Sections[2].Columns[2]);
+                page.AddControl(page.NewWebPart(imageWebPartComponent), page.Sections[2].Columns[2]);
+                page.AddControl(page.NewWebPart(imageWebPartComponent), page.Sections[2].Columns[2]);
+
+                await page.SaveAsync(pageName);
+
+                // load page again
+                var pages = await context.Web.GetPagesAsync(pageName);
+
+                Assert.IsTrue(pages.Count == 1);
+
+                page = pages.AsEnumerable().First();
+
+                Assert.IsTrue(page.Sections.Count == 3);
+                Assert.IsTrue(page.Sections[0].Type == CanvasSectionTemplate.OneColumnFullWidth);
+                Assert.IsTrue(page.Sections[0].Columns[0].Controls.Count == 2);
+                Assert.IsTrue(page.Sections[0].Columns[0].Controls[0] is IPageWebPart);
+                Assert.IsTrue((page.Sections[0].Columns[0].Controls[0] as IPageWebPart).WebPartId == page.DefaultWebPartToWebPartId(DefaultWebPart.Image));
+
+                // Move the image web part
+                page.Sections[0].Columns[0].Controls[0].Move(page.Sections[1].Columns[0], 1);
+                page.Sections[0].Columns[0].Controls[0].Move(page.Sections[1], 2);
+
+                Assert.IsTrue(page.Sections[0].Controls.Count == 0);
+                Assert.IsTrue(page.Sections[1].Columns[0].Controls.Count == 2);
+
+                // Move the image web part, setting position as last control in the column
+                page.Sections[1].Columns[1].Controls[0].MovePosition(page.Sections[2].Columns[2], 100);
+
+                Assert.IsTrue(page.Sections[2].Columns[2].Controls.Count == 4);
+
+                // delete the page
+                await page.DeleteAsync();
+            }
+        }
         #endregion
 
         #region Page Header handling
@@ -1707,6 +1765,7 @@ namespace PnP.Core.Test.SharePoint
         }
 
         [TestMethod]
+        [DoNotParallelize()]
         public async Task PublishPage_NoMinorVersion()
         {
             //TestCommon.Instance.Mocking = false;
@@ -1777,6 +1836,7 @@ namespace PnP.Core.Test.SharePoint
         }
 
         [TestMethod]
+        [DoNotParallelize()]
         public async Task PublishPage_ForceCheckout_NoMinorVersion()
         {
             //TestCommon.Instance.Mocking = false;
@@ -1850,6 +1910,7 @@ namespace PnP.Core.Test.SharePoint
         }
 
         [TestMethod]
+        [DoNotParallelize()]
         public async Task PublishPage_ForceCheckout_EnabledModeration_NoMinorVersion()
         {
             //TestCommon.Instance.Mocking = false;
@@ -1891,7 +1952,7 @@ namespace PnP.Core.Test.SharePoint
                     //as we have no MinorVersions but ForceCheckout it should not be Published
                     Assert.IsTrue(pageFile.Level != PublishedStatus.Published);
                     //should not be approved
-                    Assert.AreNotEqual("0", pageFile.ListItemAllFields["OData__ModerationStatus"].ToString());
+                    Assert.AreNotEqual("0", pageFile.ListItemAllFields["_ModerationStatus"].ToString());
 
                     //call publish again should not fail
                     await page.PublishAsync("TEST CHECK IN AND APPROVE");
@@ -1905,8 +1966,8 @@ namespace PnP.Core.Test.SharePoint
                     Assert.AreEqual(CheckOutType.None, pageFile.CheckOutType);
                     Assert.IsTrue(pageFile.Level == PublishedStatus.Published);
                     Assert.AreEqual("TEST CHECK IN AND APPROVE", pageFile.CheckInComment);
-                    Assert.AreEqual("0", pageFile.ListItemAllFields["OData__ModerationStatus"].ToString());
-                    Assert.AreEqual("TEST CHECK IN AND APPROVE", pageFile.ListItemAllFields["OData__ModerationComments"].ToString());
+                    Assert.AreEqual("0", pageFile.ListItemAllFields["_ModerationStatus"].ToString());
+                    Assert.AreEqual("TEST CHECK IN AND APPROVE", pageFile.ListItemAllFields["_ModerationComments"].ToString());
 
                     // delete the page
                     await page.DeleteAsync();
@@ -1927,6 +1988,7 @@ namespace PnP.Core.Test.SharePoint
         }
 
         [TestMethod]
+        [DoNotParallelize()]
         public async Task PublishPage_MajorAndMinorVersion_ForceCheckout_EnabledModeration()
         {
             //TestCommon.Instance.Mocking = false;
@@ -1971,7 +2033,7 @@ namespace PnP.Core.Test.SharePoint
                     //as we have no MinorVersions but ForceCheckout it should not be Published
                     Assert.IsTrue(pageFile.Level != PublishedStatus.Published);
                     //should not be approved
-                    Assert.AreNotEqual("0", pageFile.ListItemAllFields["OData__ModerationStatus"].ToString());
+                    Assert.AreNotEqual("0", pageFile.ListItemAllFields["_ModerationStatus"].ToString());
 
                     //call publish again should not fail
                     await page.PublishAsync("TEST CHECK IN AND APPROVE");
@@ -1984,8 +2046,8 @@ namespace PnP.Core.Test.SharePoint
                     pageFile = await page.GetPageFileAsync(p => p.Level, p => p.CheckOutType, p => p.CheckInComment, p => p.ListItemAllFields);
                     Assert.AreEqual(CheckOutType.None, pageFile.CheckOutType);
                     Assert.IsTrue(pageFile.Level == PublishedStatus.Published);
-                    Assert.AreEqual("0", pageFile.ListItemAllFields["OData__ModerationStatus"].ToString());
-                    Assert.AreEqual("TEST CHECK IN AND APPROVE", pageFile.ListItemAllFields["OData__ModerationComments"].ToString());
+                    Assert.AreEqual("0", pageFile.ListItemAllFields["_ModerationStatus"].ToString());
+                    Assert.AreEqual("TEST CHECK IN AND APPROVE", pageFile.ListItemAllFields["_ModerationComments"].ToString());
 
                     // delete the page
                     await page.DeleteAsync();
@@ -2331,5 +2393,37 @@ namespace PnP.Core.Test.SharePoint
             }
         }
         #endregion
+
+        #region Other page types: Topic page
+        [TestMethod]
+        public async Task TopicPageClone()
+        {
+            //TestCommon.Instance.Mocking = false;
+            TestCommon.SharePointVivaTopicsTestSetup();
+
+            using (var context = await TestCommon.Instance.GetContextAsync(TestCommon.VivaTopicCenterTestSite))
+            {
+                // We assume this page exists for now, once there's support to create new topic pages this can be updated
+                var pages = await context.Web.GetPagesAsync("topicA");
+                var topicPage = pages.AsEnumerable().First();
+                string pageName = TestCommon.GetPnPSdkTestAssetName("TopicPageClone.aspx");
+
+                // Save the page under a new name
+                topicPage.PageTitle = "TopicPageClone";
+                await topicPage.SaveAsync(pageName);
+
+                // Load the page again
+                pages = await context.Web.GetPagesAsync(pageName);
+                Assert.IsTrue(pages.Count == 1);
+                topicPage = pages.AsEnumerable().First();
+
+                Assert.IsTrue(topicPage.LayoutType == PageLayoutType.Topic);
+
+                // Delete the page
+                await topicPage.DeleteAsync();
+            }
+        }
+        #endregion
+
     }
 }

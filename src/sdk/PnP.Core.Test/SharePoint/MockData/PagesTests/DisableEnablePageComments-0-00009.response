@@ -1,9 +1,9 @@
---batchresponse_c1feabf6-2f6f-47f9-949a-e78bbbacfed7
+--batchresponse_77e9befc-6bfc-4d89-b2d1-cb73083e35f9
 Content-Type: application/http
 Content-Transfer-Encoding: binary
 
 HTTP/1.1 200 OK
 CONTENT-TYPE: application/json;odata=verbose;charset=utf-8
 
-{"d":{"SetCommentsDisabled":null}}
---batchresponse_c1feabf6-2f6f-47f9-949a-e78bbbacfed7--
+{"d":{"CommentsDisabled":false}}
+--batchresponse_77e9befc-6bfc-4d89-b2d1-cb73083e35f9--

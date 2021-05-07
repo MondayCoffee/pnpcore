@@ -46,11 +46,6 @@ namespace PnP.Core.Model.SharePoint
         public ListTemplateType TemplateType { get; }
 
         /// <summary>
-        /// Gets or sets a value that specifies whether the new list is displayed on the Quick Launch of the site.
-        /// </summary>
-        public string Url { get; }
-
-        /// <summary>
         /// Gets or sets whether verisioning is enabled on the list
         /// </summary>
         public bool EnableVersioning { get; set; }
