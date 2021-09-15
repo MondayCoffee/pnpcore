@@ -6,6 +6,8 @@
 		<IsPackable>false</IsPackable>
 
 		<Configurations>Debug;Release</Configurations>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\pnp.core.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -29,6 +31,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\PnP.Core.Auth\PnP.Core.Auth.csproj" />
+		<ProjectReference Include="..\PnP.Core.Test.Common\PnP.Core.Test.Common.csproj" />
 		<ProjectReference Include="..\PnP.Core\PnP.Core.csproj" />
 	</ItemGroup>
 

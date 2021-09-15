@@ -3,6 +3,7 @@ using PnP.Core.Model;
 using PnP.Core.Model.SharePoint;
 using PnP.Core.QueryModel;
 using PnP.Core.Services;
+using PnP.Core.Test.Common;
 using PnP.Core.Test.Utilities;
 using System;
 using System.Linq;
@@ -690,5 +691,25 @@ namespace PnP.Core.Test.Base
             }
         }
 
+        [TestMethod]
+        public async Task LiveAccessTokenAnalysis()
+        {
+            TestCommon.PnPCoreSDKTestUserSetup();
+
+            using (var context = await TestCommon.Instance.GetLiveContextAsync())
+            {
+                Assert.IsTrue(await context.AccessTokenHasScopeAsync("AllSites.FullControl"));
+                Assert.IsFalse(await context.AccessTokenHasRoleAsync("Sites.FullControl.All"));
+                Assert.IsFalse(await context.AccessTokenUsesApplicationPermissionsAsync());
+            }
+        }
+
+        [TestMethod]
+        public void StaticAccessTokenAnalysis()
+        {
+            Assert.IsTrue(PnPContext.AccessTokenHasScope(Constants.DelegatedAccessToken, "AllSites.FullControl"));
+            Assert.IsTrue(PnPContext.AccessTokenHasRole(Constants.ApplicationAccessToken, "Sites.FullControl.All"));
+            Assert.IsTrue(PnPContext.AccessTokenUsesApplicationPermissions(Constants.ApplicationAccessToken));
+        }
     }
 }
