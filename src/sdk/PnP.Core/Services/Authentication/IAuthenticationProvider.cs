@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PnP.Core.Services.Authentication;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -31,5 +32,12 @@ namespace PnP.Core.Services
         /// <param name="resource">Resource to request an access token for</param>
         /// <returns>An access token</returns>
         Task<string> GetAccessTokenAsync(Uri resource);
+
+        /// <summary>
+        /// Will allow to coordinate throttling between multiple processes  running against same tenant
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
+        delegate IThrottlingHandler ThrottlingHandler(Guid tenantId);
     }
 }
