@@ -184,7 +184,7 @@ namespace PnP.Core.Model.SharePoint
         /// <summary>
         /// Is this section collapsible
         /// </summary>
-        public bool Collapsible { get; set; }
+        public bool Collapsible { get { return SectionType!=0; } set { if (value) { SectionType = 1; } else { SectionType = 0; }; } }
 
         /// <summary>
         /// Is the collapsible section expanded?
@@ -209,7 +209,7 @@ namespace PnP.Core.Model.SharePoint
         /// <summary>
         /// Type of this section, not configurable by SDK users
         /// </summary>
-        public int SectionType { get { return Collapsible ? 1 : 0; } set { if (value == 0) { Collapsible = false; } else { Collapsible = true; }; } }
+        public int SectionType { get; set; }
 
         #endregion
 
