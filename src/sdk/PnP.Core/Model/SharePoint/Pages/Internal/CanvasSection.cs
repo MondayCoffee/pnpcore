@@ -209,7 +209,7 @@ namespace PnP.Core.Model.SharePoint
         /// <summary>
         /// Type of this section, not configurable by SDK users
         /// </summary>
-        public int SectionType { get; set; }
+        public int SectionType { get { return Collapsible ? 1 : 0; } set { if (value == 0) { Collapsible = false; } else { Collapsible = true; }; } }
 
         #endregion
 

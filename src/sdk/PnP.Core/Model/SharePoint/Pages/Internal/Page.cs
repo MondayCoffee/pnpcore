@@ -1452,18 +1452,20 @@ namespace PnP.Core.Model.SharePoint
         {
             if (zoneGroupMetadata != null)
             {
-                currentSection.Collapsible = true;
                 currentSection.SectionType = zoneGroupMetadata.Type;
                 currentSection.DisplayName = zoneGroupMetadata.DisplayName;
                 currentSection.IsExpanded = zoneGroupMetadata.IsExpanded;
                 currentSection.ShowDividerLine = zoneGroupMetadata.ShowDividerLine;
-                if (zoneGroupMetadata.IconAlignment.Equals("left", StringComparison.InvariantCultureIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(zoneGroupMetadata.IconAlignment))
                 {
-                    currentSection.IconAlignment = IconAlignment.Left;
-                }
-                else if (zoneGroupMetadata.IconAlignment.Equals("right", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    currentSection.IconAlignment = IconAlignment.Right;
+                    if (zoneGroupMetadata.IconAlignment.Equals("left", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        currentSection.IconAlignment = IconAlignment.Left;
+                    }
+                    else if (zoneGroupMetadata.IconAlignment.Equals("right", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        currentSection.IconAlignment = IconAlignment.Right;
+                    }
                 }
             }
         }
