@@ -30,6 +30,8 @@ namespace PnP.Core.Model.SharePoint
         /// </summary>
         public PageWebPart() : base()
         {
+            var emptyJson = JsonSerializer.Deserialize<JsonElement>("{}");
+
             controlType = 3;
             WebPartData = "";
             HtmlPropertiesData = "";
@@ -37,12 +39,12 @@ namespace PnP.Core.Model.SharePoint
             Title = "";
             Description = "";
             SupportsFullBleed = false;
-            SetPropertiesJson(JsonDocument.Parse("{}").RootElement);
+            SetPropertiesJson(emptyJson);
             WebPartPreviewImage = "";
             UsingSpControlDataOnly = false;
-            DynamicDataPaths = JsonDocument.Parse("{}").RootElement;
-            DynamicDataValues = JsonDocument.Parse("{}").RootElement;
-            ServerProcessedContent = JsonDocument.Parse("{}").RootElement;
+            DynamicDataPaths = emptyJson;
+            DynamicDataValues = emptyJson;
+            ServerProcessedContent = emptyJson;
         }
 
         /// <summary>
@@ -55,7 +57,7 @@ namespace PnP.Core.Model.SharePoint
             {
                 throw new ArgumentNullException(nameof(component));
             }
-            Import(component as PageComponent);
+            Import(component);
         }
         #endregion
 
@@ -118,7 +120,7 @@ namespace PnP.Core.Model.SharePoint
             }
             set
             {
-                SetPropertiesJson(JsonDocument.Parse(value).RootElement);
+                SetPropertiesJson(JsonSerializer.Deserialize<JsonElement>(value));
             }
         }
 
@@ -162,7 +164,7 @@ namespace PnP.Core.Model.SharePoint
         /// <summary>
         /// This control lives in the page header (not removable control)
         /// </summary>
-        public bool IsHeaderControl { get; internal set; }
+        public bool IsHeaderControl { get; set; }
 
         #endregion
 
@@ -172,13 +174,13 @@ namespace PnP.Core.Model.SharePoint
         /// </summary>
         /// <param name="component"><see cref="PageComponent"/> to import</param>
         /// <param name="clientSideWebPartPropertiesUpdater">Function callback that allows you to manipulate the client side web part properties after import</param>
-        public void Import(PageComponent component, Func<string, string> clientSideWebPartPropertiesUpdater = null)
+        public void Import(IPageComponent component, Func<string, string> clientSideWebPartPropertiesUpdater = null)
         {
             // Sometimes the id guid is encoded with curly brackets, so let's drop those
             WebPartId = new Guid(component.Id).ToString("D");
 
             // Parse the manifest json blob as we need some data from it
-            var wpJObject = JsonDocument.Parse(component.Manifest).RootElement;
+            var wpJObject = JsonSerializer.Deserialize<JsonElement>(component.Manifest);
 
             Title = wpJObject.GetProperty("preconfiguredEntries").EnumerateArray().First().GetProperty("title").GetProperty("default").GetString();
 
@@ -355,7 +357,7 @@ namespace PnP.Core.Model.SharePoint
                 jsonControlData = JsonWebPartData;
             }
 
-            StringBuilder html = new StringBuilder(100);
+            StringBuilder html = new StringBuilder();
             if (UsingSpControlDataOnly || IsHeaderControl)
             {
                 html.Append($@"<div {CanvasControlAttribute}=""{CanvasControlData}"" {CanvasDataVersionAttribute}=""{DataVersion}"" {ControlDataAttribute}=""{JsonControlData.Replace("\"", "&quot;")}""></div>");
@@ -446,10 +448,10 @@ namespace PnP.Core.Model.SharePoint
                 dataVersion = element.GetAttribute(WebPartDataVersionAttribute);
             }
 
-            SpControlData = JsonSerializer.Deserialize<WebPartControlData>(element.GetAttribute(ControlDataAttribute), new JsonSerializerOptions() { IgnoreNullValues = true });
+            SpControlData = JsonSerializer.Deserialize<WebPartControlData>(element.GetAttribute(ControlDataAttribute), PnPConstants.JsonSerializer_IgnoreNullValues);
             controlType = SpControlData.ControlType;
 
-            var wpDiv = element.GetElementsByTagName("div").Where(a => a.HasAttribute(WebPartDataAttribute)).FirstOrDefault();
+            var wpDiv = element.GetElementsByTagName("div").FirstOrDefault(a => a.HasAttribute(WebPartDataAttribute));
 
             string decodedWebPart;
             // Some components are in the page header and need to be handled as a control instead of a webpart
@@ -467,7 +469,7 @@ namespace PnP.Core.Model.SharePoint
                 decodedWebPart = WebUtility.HtmlDecode(wpDiv.GetAttribute(WebPartDataAttribute));
             }
 
-            var wpJObject = JsonDocument.Parse(decodedWebPart).RootElement;
+            var wpJObject = JsonSerializer.Deserialize<JsonElement>(decodedWebPart);
 
             if (wpJObject.TryGetProperty("title", out JsonElement titleProperty))
             {
@@ -525,7 +527,7 @@ namespace PnP.Core.Model.SharePoint
 
             if (wpDiv != null)
             {
-                var wpHtmlProperties = wpDiv.GetElementsByTagName("div").Where(a => a.HasAttribute(WebPartHtmlPropertiesAttribute)).FirstOrDefault();
+                var wpHtmlProperties = wpDiv.GetElementsByTagName("div").FirstOrDefault(a => a.HasAttribute(WebPartHtmlPropertiesAttribute));
                 HtmlPropertiesData = wpHtmlProperties.InnerHtml;
                 HtmlProperties = wpHtmlProperties.GetAttribute(WebPartHtmlPropertiesAttribute);
             }

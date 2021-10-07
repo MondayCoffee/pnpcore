@@ -85,7 +85,7 @@ namespace PnP.Core.Model.SharePoint
 
         public List<ICanvasControl> Controls { get; } = new List<ICanvasControl>(5);
 
-        internal List<ICanvasControl> HeaderControls { get; } = new List<ICanvasControl>();
+        public List<ICanvasControl> HeaderControls { get; } = new List<ICanvasControl>();
 
         /// <summary>
         /// Layout type of the client side page
@@ -256,7 +256,7 @@ namespace PnP.Core.Model.SharePoint
         /// <summary>
         /// ListItem linked to this page
         /// </summary>
-        internal IListItem PageListItem { get; set; }
+        public IListItem PageListItem { get; set; }
 
         #endregion
 
@@ -835,7 +835,7 @@ namespace PnP.Core.Model.SharePoint
         /// </summary>
         /// <param name="control"><see cref="ICanvasControl"/> to add</param>
         /// <param name="order">Order of the control in the given section</param>
-        internal void AddHeaderControl(ICanvasControl control, int order)
+        public void AddHeaderControl(ICanvasControl control, int order)
         {
             if (control == null)
             {
@@ -915,7 +915,7 @@ namespace PnP.Core.Model.SharePoint
         /// <returns>Html representation</returns>
         public string ToHtml()
         {
-            StringBuilder html = new StringBuilder(100);
+            StringBuilder html = new StringBuilder();
 
             if (sections.Count == 0) return string.Empty;
 
@@ -1143,13 +1143,12 @@ namespace PnP.Core.Model.SharePoint
                     else if (controlType == typeof(CanvasColumn))
                     {
                         // Need to parse empty sections
-                        var jsonSerializerSettings = new JsonSerializerOptions() { IgnoreNullValues = true };
-                        var sectionData = JsonSerializer.Deserialize<CanvasData>(controlData, jsonSerializerSettings);
+                        var sectionData = JsonSerializer.Deserialize<CanvasData>(controlData, PnPConstants.JsonSerializer_IgnoreNullValues);
 
                         CanvasSection currentSection = null;
                         if (sectionData.Position != null)
                         {
-                            currentSection = sections.Where(p => p.Order == sectionData.Position.ZoneIndex).FirstOrDefault();
+                            currentSection = sections.FirstOrDefault(p => p.Order == sectionData.Position.ZoneIndex);
                         }
 
                         if (currentSection == null)
@@ -1157,7 +1156,7 @@ namespace PnP.Core.Model.SharePoint
                             if (sectionData.Position != null)
                             {
                                 AddSection(new CanvasSection(this) { ZoneEmphasis = sectionData.Emphasis != null ? sectionData.Emphasis.ZoneEmphasis : 0 }, sectionData.Position.ZoneIndex);
-                                currentSection = sections.Where(p => p.Order == sectionData.Position.ZoneIndex).First();
+                                currentSection = sections.First(p => p.Order == sectionData.Position.ZoneIndex);
                             }
                         }
 
@@ -1166,11 +1165,11 @@ namespace PnP.Core.Model.SharePoint
                         {
                             if (sectionData.Position.LayoutIndex.HasValue)
                             {
-                                currentColumn = currentSection.Columns.Where(p => p.Order == sectionData.Position.SectionIndex && p.LayoutIndex == sectionData.Position.LayoutIndex.Value).FirstOrDefault();
+                                currentColumn = currentSection.Columns.FirstOrDefault(p => p.Order == sectionData.Position.SectionIndex && p.LayoutIndex == sectionData.Position.LayoutIndex.Value);
                             }
                             else
                             {
-                                currentColumn = currentSection.Columns.Where(p => p.Order == sectionData.Position.SectionIndex).FirstOrDefault();
+                                currentColumn = currentSection.Columns.FirstOrDefault(p => p.Order == sectionData.Position.SectionIndex);
                             }
                         }
 
@@ -1232,17 +1231,17 @@ namespace PnP.Core.Model.SharePoint
             }
 
             // Perform vertical section column matchup if that did not happen yet
-            var verticalSectionColumn = sections.Where(p => p.VerticalSectionColumn != null).FirstOrDefault();
+            var verticalSectionColumn = sections.FirstOrDefault(p => p.VerticalSectionColumn != null);
             // Only continue if the vertical section column we found was "standalone" and not yet matched with other columns
             if (verticalSectionColumn != null && verticalSectionColumn.Columns.Count == 1)
             {
                 // find another, non vertical section, column with the same zoneindex
-                var matchedUpSection = sections.Where(p => p.VerticalSectionColumn == null && p.Order == verticalSectionColumn.Order).FirstOrDefault();
+                var matchedUpSection = sections.FirstOrDefault(p => p.VerticalSectionColumn == null && p.Order == verticalSectionColumn.Order);
                 if (matchedUpSection == null)
                 {
                     // matchup did not yet happen, so let's handle it now
                     // Get the top section
-                    var topSection = sections.Where(p => p.VerticalSectionColumn == null).OrderBy(p => p.Order).FirstOrDefault();
+                    var topSection = sections.OrderBy(p => p.Order).FirstOrDefault(p => p.VerticalSectionColumn == null);
                     if (topSection != null)
                     {
                         // Add the "standalone" vertical section column to this section
@@ -1406,7 +1405,7 @@ namespace PnP.Core.Model.SharePoint
             }
             else
             {
-                var currentSection = sections.Where(p => p.Order == position.ZoneIndex).FirstOrDefault();
+                var currentSection = sections.FirstOrDefault(p => p.Order == position.ZoneIndex);
                 if (currentSection == null)
                 {
                     AddSection(new CanvasSection(this) { ZoneEmphasis = emphasis != null ? emphasis.ZoneEmphasis : 0 }, position.ZoneIndex);
@@ -1415,12 +1414,12 @@ namespace PnP.Core.Model.SharePoint
 
                 ApplyCollapsibleSectionSettings(zoneGroupMetadata, currentSection);
 
-                var currentColumn = currentSection.Columns.Where(p => p.Order == position.SectionIndex).FirstOrDefault();
+                var currentColumn = currentSection.Columns.FirstOrDefault(p => p.Order == position.SectionIndex);
 
                 // if layout index was set this means that we possibly have a vertical section column
                 if (position.LayoutIndex.HasValue)
                 {
-                    currentColumn = currentSection.Columns.Where(p => p.Order == position.SectionIndex && p.LayoutIndex == position.LayoutIndex.Value).FirstOrDefault();
+                    currentColumn = currentSection.Columns.FirstOrDefault(p => p.Order == position.SectionIndex && p.LayoutIndex == position.LayoutIndex.Value);
                 }
 
                 if (currentColumn == null)
@@ -1970,7 +1969,7 @@ namespace PnP.Core.Model.SharePoint
                 TranslatedLanguages = new List<IPageTranslationStatus>()
             };
 
-            var root = JsonDocument.Parse(response).RootElement.GetProperty("d");
+            var root = JsonSerializer.Deserialize<JsonElement>(response).GetProperty("d");
 
             // Process untranslated languages
             var untranslatedLanguages = root.GetProperty("UntranslatedLanguages").GetProperty("results");
@@ -2423,10 +2422,9 @@ namespace PnP.Core.Model.SharePoint
 
             if (!string.IsNullOrEmpty(response.Json))
             {
-                var root = JsonDocument.Parse(response.Json).RootElement.GetProperty("d").GetProperty("GetClientSideWebParts").GetProperty("results");
+                var root = JsonSerializer.Deserialize<JsonElement>(response.Json).GetProperty("d").GetProperty("GetClientSideWebParts").GetProperty("results");
 
-                var jsonSerializerSettings = new JsonSerializerOptions() { IgnoreNullValues = true };
-                var clientSideComponents = JsonSerializer.Deserialize<List<PageComponent>>(root.ToString(), jsonSerializerSettings);
+                var clientSideComponents = JsonSerializer.Deserialize<List<PageComponent>>(root.ToString(), PnPConstants.JsonSerializer_IgnoreNullValues);
 
                 if (!clientSideComponents.Any())
                 {

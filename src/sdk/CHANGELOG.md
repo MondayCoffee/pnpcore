@@ -6,12 +6,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.4.0]
 
 ### Added
 
 - Added IWeb.GetFileByServerRelativeUrlOrDefault methods that can return null for non existing files + dropped the IFile.Exists property as it never really worked [jansenbe - Bert Jansen]
 - Added support for reading, configuring and saving of collapsible sections on pages #539 [jansenbe - Bert Jansen]
+- Preview of Admin library providing Microsoft 365 admin functionality to PnP Core SDK users [jansenbe - Bert Jansen]
+- Support for running unit tests using Application permissions (compared to default Delegated) [jansenbe - Bert Jansen]
+- PnP Transformation Framework to support transforming external content to SharePoint Online modern pages [paolopia - Paolo Pialorsi]
 
 ### Changed
 
@@ -20,6 +23,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Don't replace _ with _x005f_ and space with _x0020_ when working with list item fields, the StaticName is to be used for instead [jansenbe - Bert Jansen]
 - Fix for "Requested value 'systemEventMessage' was not found." for Chat Messages #536 [jansenbe - Bert Jansen]
 - Default retry mechanism now uses retry-after header for REST, CSOM and Graph requests, aligned with the settings in PnP Framework [jansenbe - Bert Jansen]
+- Switched to using V1 Taxonomy API now that it's out of beta [jansenbe - Bert Jansen]
+- Implemented generic handling for non-English timezone strings, initial fix for #543 [jansenbe - Bert Jansen]
+- PnP Core SDK internals are not exposed anymore to libraries outside of the PnP Core SDK solution [jansenbe - Bert Jansen]
+- PnP Core SDK assemblies are now strong named #542 [jansenbe - Bert Jansen]
+- PERF: ImplementsInterface -> massive performance improvement! Running all offline PnP.Core tests is twice as fast... [jansenbe - Bert Jansen] 
+- PERF: AsExpando removed LINQ dependencies to speed up and lower memory requirments [jansenbe - Bert Jansen]
+- PERF: Improved parsing of REST batch response for .NET 5: 50% less memory allocations + 50% to 90% performance gain (depending on the size) [jansenbe - Bert Jansen]
+- PERF: Reuse JsonSerializerOptions: overall offline test run is 10% faster [jansenbe - Bert Jansen]
+- PERF: Standardized on JsonSerializer.Deserialize, replaced JsonDocument.Parse where needed [jansenbe - Bert Jansen]
+- PERF: Get the response string, using HttpCompletionOption.ResponseHeadersRead and ReadAsStreamAsync to lower the memory pressure when processing larger responses + performance is better [jansenbe - Bert Jansen]
+- PERF: Cache LINQ based field lookups in ListDataAsStreamHandler, 35% faster when loading 2500 list items with all fields [jansenbe - Bert Jansen]
+- Added `All` property that gets translated to a * in the $select when PnP Framework resorts to using a SharePoint REST query [jansenbe - Bert Jansen]
+- Added _CommentCount to BuiltInFields #554 [avuorine]
+- For raw API requests the url encoding was not always done correct [jansenbe - Bert Jansen]
 
 ## [1.3.0]
 

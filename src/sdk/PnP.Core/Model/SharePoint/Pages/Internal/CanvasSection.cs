@@ -157,7 +157,7 @@ namespace PnP.Core.Model.SharePoint
         {
             get
             {
-                return Columns.Where(p => p.LayoutIndex == 2).FirstOrDefault();
+                return Columns.FirstOrDefault(p => p.LayoutIndex == 2);
             }
         }
 
@@ -220,7 +220,7 @@ namespace PnP.Core.Model.SharePoint
         /// <returns>HTML string representing this section</returns>
         internal string ToHtml()
         {
-            StringBuilder html = new StringBuilder(100);
+            StringBuilder html = new StringBuilder();
             foreach (var column in Columns.OrderBy(z => z.LayoutIndex).ThenBy(z => z.Order))
             {
                 html.Append((column as CanvasColumn).ToHtml());

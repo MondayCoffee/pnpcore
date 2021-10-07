@@ -136,7 +136,7 @@ namespace PnP.Core.Model.SharePoint
             catch { }
 #pragma warning restore CA1031 // Do not catch general exception types
 
-            StringBuilder html = new StringBuilder(100);
+            StringBuilder html = new StringBuilder();
             html.Append($@"<div {CanvasControlAttribute}=""{CanvasControlData}"" {CanvasDataVersionAttribute}=""{ DataVersion}""  {ControlDataAttribute}=""{jsonControlData.Replace("\"", "&quot;")}"">");
             html.Append($@"<div {TextRteAttribute}=""{Rte}"">");
             if (Text.Trim().StartsWith("<p>", StringComparison.InvariantCultureIgnoreCase) ||
@@ -165,7 +165,7 @@ namespace PnP.Core.Model.SharePoint
         {
             base.FromHtml(element);
 
-            var div = element.GetElementsByTagName("div").Where(a => a.HasAttribute(TextRteAttribute)).FirstOrDefault();
+            var div = element.GetElementsByTagName("div").FirstOrDefault(a => a.HasAttribute(TextRteAttribute));
 
             if (div != null)
             {
@@ -190,7 +190,7 @@ namespace PnP.Core.Model.SharePoint
                 Text = div.InnerHtml;
             }
 
-            SpControlData = JsonSerializer.Deserialize<TextControlData>(element.GetAttribute(ControlDataAttribute), new JsonSerializerOptions() { IgnoreNullValues = true });
+            SpControlData = JsonSerializer.Deserialize<TextControlData>(element.GetAttribute(ControlDataAttribute), PnPConstants.JsonSerializer_IgnoreNullValues);
             controlType = SpControlData.ControlType;
         }
         #endregion

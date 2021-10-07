@@ -72,6 +72,10 @@ namespace PnP.Core.Model.SharePoint
             {
                 return dataVersion;
             }
+            set
+            {
+                dataVersion = value;
+            }
         }
 
         /// <summary>
@@ -126,6 +130,10 @@ namespace PnP.Core.Model.SharePoint
             get
             {
                 return instanceId;
+            }
+            set
+            {
+                instanceId = value;
             }
         }
 
@@ -320,7 +328,7 @@ namespace PnP.Core.Model.SharePoint
             }
 
             // Deserialize the json string
-            var controlData = JsonSerializer.Deserialize<CanvasControlData>(controlDataJson, new JsonSerializerOptions() { IgnoreNullValues = true });
+            var controlData = JsonSerializer.Deserialize<CanvasControlData>(controlDataJson, PnPConstants.JsonSerializer_IgnoreNullValues);
 
             if (controlData.ControlType == 3)
             {
@@ -342,7 +350,7 @@ namespace PnP.Core.Model.SharePoint
         #region Internal and private methods
         internal virtual void FromHtml(IElement element)
         {
-            var controlData = JsonSerializer.Deserialize<CanvasControlData>(element.GetAttribute(ControlDataAttribute), new JsonSerializerOptions() { IgnoreNullValues = true });
+            var controlData = JsonSerializer.Deserialize<CanvasControlData>(element.GetAttribute(ControlDataAttribute), PnPConstants.JsonSerializer_IgnoreNullValues);
 
             // populate base object
             canvasDataVersion = element.GetAttribute(CanvasDataVersionAttribute);
