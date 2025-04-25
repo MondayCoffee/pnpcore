@@ -32,6 +32,11 @@ namespace PnP.Core.Model.SharePoint
         public string AccessRequestSiteDescription { get; set; }
 
         /// <summary>
+        /// Get the collection of alerts for the current Web site.
+        /// </summary>
+        public IAlertCollection Alerts { get; }
+
+        /// <summary>
         /// Gets a value that specifies whether the automatic ASPX page indexed is allowed.
         /// </summary>
         public bool AllowAutomaticASPXPageIndexing { get; set; }

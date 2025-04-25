@@ -122,6 +122,8 @@ namespace PnP.Core.Model.SharePoint
 
         public string AccessRequestSiteDescription { get => GetValue<string>(); set => SetValue(value); }
 
+        public IAlertCollection Alerts { get => GetModelCollectionValue<IAlertCollection>(); }
+
         public bool AllowAutomaticASPXPageIndexing { get => GetValue<bool>(); set => SetValue(value); }
 
         public bool AllowCreateDeclarativeWorkflowForCurrentUser { get => GetValue<bool>(); set => SetValue(value); }
